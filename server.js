@@ -54,19 +54,21 @@ const defaultProjects = [
 
 // Seed DB on first run if empty
 async function seedIfEmpty() {
-    const adminCount = await Admin.countDocuments();
     const skillCount = await Skill.countDocuments();
     const statsCount = await Stats.countDocuments();
     const projectCount = await Project.countDocuments();
 
-    if (adminCount === 0) {
-        // Create default admin user
-        await Admin.create({
-            username: process.env.ADMIN_USER || 'Mohd_Ateek09',
-            password: process.env.ADMIN_PASSWORD || 'Ateek@#&258013710415'
-        });
-        console.log('✅ Default Admin seeded');
-    }
+    // Sync admin credentials with environment variables on every start
+    const adminUser = process.env.ADMIN_USER || 'Mohd_Ateek09';
+    const adminPass = process.env.ADMIN_PASSWORD || 'Ateek@#&258013710415';
+
+    await Admin.findOneAndUpdate(
+        {}, // Update the first found admin (or create if none)
+        { username: adminUser, password: adminPass },
+        { upsert: true, new: true }
+    );
+    console.log('✅ Admin credentials synced');
+
     if (skillCount === 0) await Skill.insertMany(defaultSkills);
     if (statsCount === 0) await Stats.create({ experience: '1+', projects: '5+', clients: 'Pending..' });
     if (projectCount === 0) await Project.insertMany(defaultProjects);
