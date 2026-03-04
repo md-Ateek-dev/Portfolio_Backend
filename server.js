@@ -204,4 +204,4 @@ app.delete('/api/projects/:id', async (req, res) => {
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/', (req, res) => res.json({ status: 'Portfolio API running 🚀' }));
 
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on:${PORT}`));
