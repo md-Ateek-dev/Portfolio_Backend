@@ -2,6 +2,9 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import multer from 'multer';
 import { Admin, Skill, Stats, Project } from './models.js';
 
 dotenv.config();
@@ -200,6 +203,35 @@ app.delete('/api/projects/:id', async (req, res) => {
         res.json({ message: 'Project deleted' });
     } catch (err) {
         res.status(500).json({ error: err.message });
+    }
+});
+
+// ─── Cloudinary & Multer Config ───────────────────────────────────────────────
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'portfolio_projects',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    },
+});
+
+const upload = multer({ storage });
+
+// POST upload image
+app.post('/api/upload', upload.single('image'), (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No image uploaded' });
+        }
+        res.status(200).json({ w_imag: req.file.path });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to upload image' });
     }
 });
 
