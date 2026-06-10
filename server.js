@@ -100,13 +100,32 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// ─── COMBINED PORTFOLIO (single request for faster load) ──────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+
+app.get('/api/portfolio', async (req, res) => {
+    try {
+        const [skills, stats, projects] = await Promise.all([
+            Skill.find().sort({ createdAt: 1 }).lean(),
+            Stats.findOne().lean(),
+            Project.find().sort({ createdAt: -1 }).lean(),
+        ]);
+        res.set('Cache-Control', 'public, max-age=300');
+        res.json({ skills, stats, projects });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // ─── SKILLS ROUTES ────────────────────────────────────────────────────────────
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // GET all skills
 app.get('/api/skills', async (req, res) => {
     try {
-        const skills = await Skill.find().sort({ createdAt: 1 });
+        const skills = await Skill.find().sort({ createdAt: 1 }).lean();
+        res.set('Cache-Control', 'public, max-age=300');
         res.json(skills);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -151,7 +170,8 @@ app.put('/api/skills', async (req, res) => {
 // GET stats
 app.get('/api/stats', async (req, res) => {
     try {
-        const stats = await Stats.findOne();
+        const stats = await Stats.findOne().lean();
+        res.set('Cache-Control', 'public, max-age=300');
         res.json(stats);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -179,7 +199,8 @@ app.put('/api/stats', async (req, res) => {
 // GET all projects
 app.get('/api/projects', async (req, res) => {
     try {
-        const projects = await Project.find().sort({ createdAt: -1 });
+        const projects = await Project.find().sort({ createdAt: -1 }).lean();
+        res.set('Cache-Control', 'public, max-age=300');
         res.json(projects);
     } catch (err) {
         res.status(500).json({ error: err.message });
